@@ -1,0 +1,189 @@
+/*
+http://www.jpllerin.info/bl0g/ - More ESP8266 Projects                          - 
+
+http://getbootstrap.com/ - Learn About Twitter Bootstrap
+
+http://fortawesome.github.io/Font-Awesome/3.2.1/cheatsheet/ - Learn About Font-Awesome Icons
+
+http://tympanus.net/codrops/2015/02/16/create-animated-text-fills/ - Learn About CSS Text Fills
+
+https://gist.github.com/igrr/3b66292cf8708770f76b - Base Sketch
+
+*/
+
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <Ticker.h>
+Ticker tickerSetHigh;
+Ticker tickerSetLow;
+
+//////////////////////////////////////////////    *            *           *                                                                                        *                                                                             
+///////////////////////////////*/////////////              *  \/  *                     *                                                                          /\                                 *                                           
+////////*///////////////////////////////////                  ||                                                                   *           *              ____/  \____                                                                      * * * * * * * * * *       * * * * * * * * * *         * * * * * * * * * 
+///////////////////////////////////////////          /\       ||     ____    ________                                                                         \          /                                                                    * * * * * * * * * *        * * * * * * * * * *         * * * * * * * * * *
+// WiFi Creds ////////////////////////////  \\      //\\      // || | ___||||_____  /                 *                                                    *   \  IoA   /   *               *                                               * * * *                     * * *                       * *               * *    
+const char* ssid     = "yourSSID";     //    \\    //  \\    //  || ||__  ||     / /                                   *                                       /        \                                     *                           * * * * * * * * * * * *      * * * * * * * * * *         * *                * *
+const char* password = "yourpasswd";  //      \\  //    \\  //   || | __| ||    / /___________________________________________________________________________/    /\    \_                                         *  *    *  *         * * * * * * * * * * * *        * * * * * * * * * *       * * * * * * * * * * * *
+///////////////////////////////////////        \\//      \\//    || ||    ||   /_________________________I <3 ESP8266 & ArduinoIDE______________________________*_/  \_*___|>>>>>>>*>>>>>>>>>>>>>>>>>>>>>>>>>>>> *  >>>  *  >>>  * >>>> * * * *                                      * * * *     * * * * * * * * * * * *
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\          *      *      *       * * * *                        * *           * * * *    * * *
+//===============================================================================================================================================================================//  \\\\\\\\\\\\\\\\\\\\            *       *           * * * * * * * * * * * * *    * * * * * * * * * * *    * * *
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////____\\\\\\\\\\\\\\\\\\\\               *                * * * * * * * * * * * *    * * * * * * * * * * *    * * *
+////////////////////////////////////////////////////////////////////// HTML LEGOS ////////////////////////////////////////////////////////////////////////////////////////////////////////////|     |///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////| 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////|     |///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////|
+String header        = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>ESP8266</title><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css' /></head>";
+String header_Rfsh   = "<html><head><META HTTP-EQUIV='Refresh' CONTENT='1;URL=/leds'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>I <3 ESP8266</title><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css' /></head>";
+String headerRfshTkr    = "<html><head><META HTTP-EQUIV='Refresh' CONTENT='1;URL=/tkr'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>I <3 ESP8266</title><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css' /></head>";
+String menu_btns     = "<br /><div class='row'><div class='col-xs-12 col-sm-12 col-md-6 col-md-offset-3'><center><div class='btn-group' role='group' aria-label='MENU'><a href='/leds' type='button' class='btn btn-md' style='background-color: #000; frameborder=1; border-color:#656565;'>Toggle LEDs <i class='fa fa-lightbulb-o'></i></a><a href='/adc' type='button' class='btn btn-md' style='background-color: #000; frameborder=1; border-color:#656565;'>A/D Converter <i class='fa fa-random'></i></a><a type='button' class='btn btn-md' style='background-color: #000; frameborder=1; border-color:#656565;' href='/tkr'>Ticker <i class='fa fa-spin fa-clock-o'></i></a></div></center></div></div>";
+String toggle0       = "<div class='col-xs-6 col-sm-6 col-md-3 col-md-offset-3' style='padding: 15px;'><div class='well' style='background-color: #001; color: ffd700; border-color:#000; padding: 15px;'><div class=''><center><form class='form-inline' action='led0'><div class='radio'><label><input type='radio' name='state' value='1' checked style='width: 55px; height: 55px'> On </label></div><div class='radio'><label><input type='radio' name='state' value='0' style='width: 35px; height: 35px'> Off </label></div><br /><button type='submit' class='btn btn-primary btn-lg' value=''>Toggle LED0</button></form></center></div></div></div>";
+String toggle2       = "<div class='col-xs-6 col-sm-6 col-md-3' style='padding: 15px;'><div class='well' style='background-color: #001; color: ffd700; border-color:#000; padding: 15px;'><div class=''><center><form class='form-inline' action='led2'><div class='radio'><label><input type='radio' name='state' value='1' checked style='width: 55px; height: 55px'> On </label></div><div class='radio'><label><input type='radio' name='state' value='0' style='width: 35px; height: 35px'> Off </label></div><br /><button type='submit' class='btn btn-primary btn-lg'  value=''>Toggle LED2</button></form></center></div></div></div>";
+String tkrForm0      = "<div class='row'><div class='col-xs-12 col-sm-12 col-md-12 col-lg-12'><div class='col-md-6 col-md-offset-3'><form class='form-inline' action='tkr0'><div class='form-group'><label for='LED OFF time in ms.'> ms. OFF </label><input type='number' class='form-control' id='off' name='off'  placeholder='55'></div><div class='form-group'><label for='LED ON time in ms.'> ms. ON </label><input type='number' class='form-control' id='on' name='on'  placeholder='56'></div><button type='submit' class='btn btn-default'>Start The Party!</button></form></div></div></div>";
+String adcFrame      = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/adc.html' scrolling='no' align='center' height='200px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String ledsFrame     = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/leds.html' scrolling='no' align='center' height='125px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String flameFrame    = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/fire.html' scrolling='no' align='center' height='115px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String tkrFrame      = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/tkr.html' scrolling='no' align='center' height='175px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String ESP_Sml_Frame = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/esp_sml.html' scrolling='no' align='center' height='150px' width='255px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String rainbowFrame  = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/rainbow.html' scrolling='no' align='center' height='200px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";  
+String cookieFrame   = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/Cookie.html' scrolling='no' align='center' height='200px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String ESP01Frame    = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/esp01.html' scrolling='no' align='center' height='500px' width='600px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String ESP03Frame    = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/esp03.html' scrolling='no' align='center' height='330px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String jackFrame     = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/jackBurton.html' scrolling='no' align='center' height='300px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String brainFrame    = "<div class='row'><div class='col-xs-12 col-md-12 col-lg-12' style='text-align: center;'><iframe src='http://dev.jpellerin.info/ESP/brain.html' scrolling='no' align='center' height='500px' width='330px' frameborder=0; border-color:#000; background:#000; border-style:none;'></iframe></div></div>";
+String back          = "<div class='row'><div class='col-xs-12 col-md-6 col-md-offset-3'<br /><a type='button' href='/' class='btn btn-lg btn-block' style='background-color: #000; frameborder=1; border-color:#656565;''>Back To Main</a><br /></div></div>";
+String Chipset       = "<div class='row'><div class='col-md-12' style='text-align: center;'><h3><i class='fa fa-fire'></i> The Hottest Chipset This Side of the Matrix <i class='fa fa-fire-extinguisher'></i></h3></div></div>";
+String body_open     = "<body style='background-color: #000;'><div class='container'>";
+String row_open      = "<div class='row'>";
+String div_open      = "<div class='col-md-12'>";
+String div_close     = "</div>";
+String body_close    = "</div></body></html>";                                              
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////|
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////|
+
+  
+// HTTP server will listen at port 80
+ESP8266WebServer server(80);
+
+const int led0 = 0;
+const int led2 = 2;
+
+// Set up Ticker pinmode for LED 0
+void setPin0(int state) {
+  digitalWrite(led0, state);
+}
+// Set up Ticker pinmode for LED 2
+void setPin2(int state) {
+  digitalWrite(led2, state);
+}
+// Analog to Digital Converter runing on GPIO 0
+void handle_adc() {
+  float val = analogRead(0);
+  server.send(200, "text/html", header + body_open + adcFrame + ESP_Sml_Frame + row_open + div_open + String("<h1 style='font-size: 55px; text-align: center;'>") + String("<font style='color: red;'>") + String(val) + String("</font>   <a href='/adc' ><i class='fa fa-refresh'></i></a></h1>") + div_close + div_close + back + body_close);
+}
+// Toggle LED Page
+void handle_leds() {
+  server.send(200, "text/html", header + body_open + ledsFrame + rainbowFrame + row_open + toggle0 + toggle2 + div_close + back + body_close);
+}
+// Set and display current state of LED 0 with page refresh
+void handle_led0() {
+  // get the value of request argument "state" and convert it to an int
+  int state = server.arg("state").toInt();
+  
+  digitalWrite(led0, state);
+  server.send(200, "text/html", header_Rfsh + body_open + cookieFrame +  row_open + String("<div class='col-md-12'><h1 style='text-align: center;'>") + String("LED is now ") + String("<font style='color: red;'>") + ((state)?"ON":"OFF") + String("</font><br /><br /></h1>") + div_close + div_close + body_close) ;
+  delay(3000);
+}
+// Set and display Current state of LED 2 with page refresh 
+void handle_led2() {
+  // get the value of request argument "state" and convert it to an int
+  int state = server.arg("state").toInt();
+  
+  digitalWrite(led2, state);
+  server.send(200, "text/html", header_Rfsh + body_open + cookieFrame +  row_open + String("<div class='col-md-12'><h1 style='text-align: center;'>") + String("LED is now ") + String("<font style='color: red;'>") + ((state)?"ON":"OFF") + String("</font><br /><br /></h1>") + div_close + div_close + body_close);
+}
+// Ticker Page
+void handle_tkr() {
+  server.send(200, "text/html", header + body_open + tkrFrame + brainFrame + tkrForm0 + row_open + div_open +  div_close + div_close + back + body_close);
+}
+
+void handle_tkr0() {                                                                                                                                                                                  
+ // get the value of request argument "0ff" and convert it to an int                                                                                                                                
+ const int off = server.arg("off").toInt();                                                                                                                                                        
+  // get the value of request argument "0n" and convert it to an int                                                                                                                               
+ const int on = server.arg("on").toInt(); 
+ 
+      // TODO - fix ugly code with for loop                                                                                                                                                           
+   tickerSetLow.attach_ms(off, setPin0, 0);
+   tickerSetHigh.attach_ms(on, setPin0, 1);
+   delay(2500);   
+   tickerSetLow.attach_ms(off, setPin2, 0);
+   tickerSetHigh.attach_ms(on, setPin2, 1);      
+   delay(2500);
+   tickerSetLow.attach_ms(off, setPin0, 0);
+   tickerSetHigh.attach_ms(on, setPin0, 1);
+   delay(2500);   
+   tickerSetLow.attach_ms(off, setPin2, 0);
+   tickerSetHigh.attach_ms(on, setPin2, 1);
+   delay(2500);
+   tickerSetLow.attach_ms(off, setPin0, 0);
+   tickerSetLow.attach_ms(off, setPin0, 1);
+   delay(2500);   
+   tickerSetLow.attach_ms(off, setPin2, 0);
+   tickerSetHigh.attach_ms(on, setPin2, 1);
+  
+   // Jack Burton Approves!!!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+  server.send(200, "text/html", headerRfshTkr + body_open + String("<h2 style='text-align: center;'>I APPROVE!</h2>") + jackFrame + row_open + div_open + div_close + div_close + back + body_close);                                                                    
+}                                                                                                                                                                                        
+
+void handle_esp() {
+  server.send(200, "text/html", header + body_open + flameFrame + ESP01Frame + row_open + div_open +  div_close + div_close + back + body_close);
+}
+
+
+ 
+void setup(void) {
+  Serial.begin(115200);
+  Serial.println("");
+  pinMode(led0, OUTPUT);
+  digitalWrite(led0, 0);
+  pinMode(led2, OUTPUT);
+  digitalWrite(led2, 0);
+
+  
+  // Connect to WiFi network
+  WiFi.begin(ssid, password);
+  
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print("*");
+  }
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+   
+  // Set up the endpoints for HTTP server
+  //
+  // Endpoints can be written as inline functions:
+  server.on("/", [](){ // Root Directory (home)
+   server.send(200, "text/html", header + body_open + flameFrame + Chipset  + ESP03Frame + menu_btns + div_close + body_close);
+  });
+  
+  // And as regular external functions:
+  server.on("/adc",  handle_adc); // Analog/Digital Converter Page
+  server.on("/leds", handle_leds); // Toggle LEDs Page
+  server.on("/led0", handle_led0);
+  server.on("/led2", handle_led2);
+  server.on("/tkr", handle_tkr); // Set Ticker Values Page
+  server.on("/tkr0", handle_tkr0);
+  server.on("/esp", handle_esp); // ESP Large
+  
+  // Start the server 
+  server.begin();
+  Serial.println("HTTP Server Activated - Hack The Planet!!!");
+}
+ 
+void loop(void) {
+  // check for incomming client connections frequently in the main loop:
+  server.handleClient();
+}
